@@ -27,7 +27,6 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     //TODO:
     //
     // pretty print integers with commas... 
-    http://en.wikipedia.org/wiki/Agora_(film)#Release
     fd = open(path,flags);
 
     if ( fd == -1 ) {

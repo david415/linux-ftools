@@ -1,0 +1,12 @@
+Source: linux-ftools
+Section: unknown
+Priority: extra
+Maintainer: Kevin Burton <burtonator@gmail.com>
+Build-Depends: debhelper (>= 7), autotools-dev
+Standards-Version: 3.7.3
+Homepage: http://code.google.com/p/linux-ftools/
+
+Package: linux-ftools
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: These are tools designed for working with modern linux system calls including, mincore, fallocate, fadvise, etc.

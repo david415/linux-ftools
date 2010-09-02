@@ -1,0 +1,18 @@
+=====
+= Release instructions for developers doing releases =
+
+# regen configure
+
+aclocal && automake && autoconf
+
+automake might need --add-missing the first time.
+
+# make and install it
+
+make clean && make && make install
+
+==== 
+= Making Debian packages
+
+fakeroot debian/rules clean
+fakeroot debian/rules binary

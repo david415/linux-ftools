@@ -13,6 +13,7 @@ struct fincore_result
     long cached_size;
 };
 
+
 void fincore(char* path, int pages, int summarize, int only_cached, struct fincore_result *result ) {
 
     int fd;
@@ -21,24 +22,36 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     unsigned char *mincore_vec;
     size_t page_size = getpagesize();
     size_t page_index;
+    char *errstr;
 
     int flags = O_RDWR;
     
     //TODO:
     //
     // pretty print integers with commas... 
+
+    // TODO
+    // replaced all these ugly asprintf + perror with a wrapper function
+
     fd = open(path,flags);
 
     if ( fd == -1 ) {
-        printf("%s: cannot open\n", path);
-        // perror in this case prints error without the ':'
-        // I need to have all errors parsable...
+        if( (asprintf(&errstr, "cannot open file: %s", path)) == -1)
+        {   
+            fprintf (stderr,"asprintf: out of memory\n");
+            exit(1);
+        }
+        perror(errstr);
         return;
     }
 
     if ( fstat( fd, &file_stat ) < 0 ) {
-        printf("%s:\n", path);
-        perror( "Could not stat file");
+        if( (asprintf(&errstr, "Could not stat file: %s", path)) == -1)
+        {
+            fprintf (stderr,"asprintf: out of memory\n");
+            exit(1);
+        }
+        perror(errstr);
         return;
     }
 
@@ -50,8 +63,12 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     file_mmap = mmap((void *)0, file_stat.st_size, PROT_NONE, MAP_SHARED, fd, 0);
     
     if ( file_mmap == MAP_FAILED ) {
-        printf("%s:\n", path);
-        perror( "Could not mmap file" );
+        if( (asprintf(&errstr, "Could not mmap file: %s", path)) == -1)
+        {
+            fprintf (stderr,"asprintf: out of memory\n");
+            exit(1);
+        }
+        perror(errstr);
         return;        
     }
 
@@ -64,8 +81,12 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     }
 
     if ( mincore(file_mmap, file_stat.st_size, mincore_vec) != 0 ) {
-        printf("%s:\n", path);
-        perror( "Could not call mincore on file" );
+        if( (asprintf(&errstr, "Could not call mincore for file: %s", path)) == -1)
+        {   
+            fprintf (stderr,"asprintf: out of memory\n");
+            exit(1);
+        }
+        perror(errstr);
         exit( 1 );
     }
 

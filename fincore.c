@@ -13,6 +13,19 @@ struct fincore_result
     long cached_size;
 };
 
+// wrapper function for perror
+f_err(char* path, char* msg) {
+
+    char* errstr;
+
+    if( (asprintf(&errstr, "%s: %s", msg, path)) == -1)
+    {
+        fprintf (stderr,"asprintf: out of memory\n");
+        exit(1);
+    }
+    perror(errstr);
+
+}
 
 void fincore(char* path, int pages, int summarize, int only_cached, struct fincore_result *result ) {
 
@@ -30,28 +43,15 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     //
     // pretty print integers with commas... 
 
-    // TODO
-    // replaced all these ugly asprintf + perror with a wrapper function
-
     fd = open(path,flags);
 
     if ( fd == -1 ) {
-        if( (asprintf(&errstr, "cannot open file: %s", path)) == -1)
-        {   
-            fprintf (stderr,"asprintf: out of memory\n");
-            exit(1);
-        }
-        perror(errstr);
+        f_err(path,"Cannot open file");
         return;
     }
 
     if ( fstat( fd, &file_stat ) < 0 ) {
-        if( (asprintf(&errstr, "Could not stat file: %s", path)) == -1)
-        {
-            fprintf (stderr,"asprintf: out of memory\n");
-            exit(1);
-        }
-        perror(errstr);
+        f_err(path, "Could not stat file");
         return;
     }
 
@@ -63,13 +63,8 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     file_mmap = mmap((void *)0, file_stat.st_size, PROT_NONE, MAP_SHARED, fd, 0);
     
     if ( file_mmap == MAP_FAILED ) {
-        if( (asprintf(&errstr, "Could not mmap file: %s", path)) == -1)
-        {
-            fprintf (stderr,"asprintf: out of memory\n");
-            exit(1);
-        }
-        perror(errstr);
-        return;        
+        f_err(path, "Could not mmap file");
+        return;
     }
 
     mincore_vec = calloc(1, (file_stat.st_size+page_size-1)/page_size);
@@ -81,12 +76,7 @@ void fincore(char* path, int pages, int summarize, int only_cached, struct finco
     }
 
     if ( mincore(file_mmap, file_stat.st_size, mincore_vec) != 0 ) {
-        if( (asprintf(&errstr, "Could not call mincore for file: %s", path)) == -1)
-        {   
-            fprintf (stderr,"asprintf: out of memory\n");
-            exit(1);
-        }
-        perror(errstr);
+        f_err(path, "Could not call mincore for file");
         exit( 1 );
     }
 
@@ -194,7 +184,7 @@ int main(int argc, char *argv[]) {
 
     long total_cached_size = 0;
 
-    printf("filename size\ttotal pages\tcached pages\tcached size\tcached perc\n");
+    printf("filename size\ttotal pages\tcached pages\tcached size\tcached percentage\n");
 
     for( ; fidx < argc; ++fidx ) {
 
